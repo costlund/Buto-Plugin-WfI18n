@@ -1,5 +1,9 @@
-version: 1.0.0
+version: 1.1.0
 history:
+  1.1.0:
+    date: '2020-10-01'
+    title: 'New method'
+    description: 'Add new method event_translate_string.'
   1.0.0:
     date: '2020-03-26'
     title: 'First version.'

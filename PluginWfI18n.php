@@ -1,16 +1,30 @@
 <?php
 /**
 <p>
+Use event_translate_string as your first choice.
 </p>
  */
 class PluginWfI18n{
   /**
-  <p>
-  Run event document_render_element for this.
-  </p>
+   * This event must listen for event document_render_string. It¨s occure before Buto writes the innerHTML param to the browser.
+   */
+  public static function event_translate_string($value, $string){
+    $i18n = new PluginWfI18n();
+    $string = $i18n->translateFromTheme($string);
+    return $string;
+  }
+  /**
+  <p>This event must listen for event document_render_element.</p>
+  <p>Settings in /theme/xx/yy/config/settings.yml</p>
   #code-yml#
-  plugin: 'wf/i18n'
-  method: 'translate'
+  i18n:
+    language: sv
+    fallback:
+      - en
+  #code#
+  <p>Create file /theme/xx/yy/i18n/sv.yml</p>
+  #code-yml#
+  Home: Hem
   #code#
    */
   public static function event_translate($value, $element){
@@ -30,46 +44,20 @@ class PluginWfI18n{
     /**
      * Check if key innerHTML exist.
      */
-    if(wfArray::isKey($element, 'innerHTML')){
+    if(!is_array(wfArray::get($element, 'innerHTML'))){
       /**
-       * innerHTML must be a string.
+       * Pick up innerHTML, can also be a separate value in element settings.
        */
-      if(!is_array(wfArray::get($element, 'innerHTML'))){
-        /**
-         * Pick up innerHTML, can also be a separate value in element settings.
-         */
-        if(wfArray::get($element, 'settings/i18n/key')){
-          $innerHTML = wfArray::get($element, 'settings/i18n/key');
-        }else{
-          $innerHTML = wfArray::get($element, 'innerHTML');
-        }
-        /**
-         * From element.
-         */
-        if(wfArray::get($element, 'settings/i18n/plugin')){
-          $filename = '/theme/[theme]/i18n/plugin/'.wfArray::get($element, 'settings/i18n/plugin').'/'.$language.'.yml';
-          if(wfFilesystem::fileExist(wfArray::get($GLOBALS, 'sys/app_dir').$filename)){
-            $temp = wfSettings::getSettings($filename);
-            if($temp && isset($temp[$innerHTML])){
-              $innerHTML = $temp[$innerHTML];
-              $element = wfArray::set($element, 'innerHTML', $innerHTML);
-              return $element;
-            }
-          }
-          $filename = '/plugin/'.wfArray::get($element, 'settings/i18n/plugin').'/i18n/'.$language.'.yml';
-          if(wfFilesystem::fileExist(wfArray::get($GLOBALS, 'sys/app_dir').$filename)){
-            $temp = wfSettings::getSettings($filename);
-            if($temp && isset($temp[$innerHTML])){
-              $innerHTML = $temp[$innerHTML];
-              $element = wfArray::set($element, 'innerHTML', $innerHTML);
-              return $element;
-            }
-          }
-        }
-        /**
-         * From theme.
-         */
-        $filename = '/theme/[theme]/i18n/'.$language.'.yml';
+      if(wfArray::get($element, 'settings/i18n/key')){
+        $innerHTML = wfArray::get($element, 'settings/i18n/key');
+      }else{
+        $innerHTML = wfArray::get($element, 'innerHTML');
+      }
+      /**
+       * From element.
+       */
+      if(wfArray::get($element, 'settings/i18n/plugin')){
+        $filename = '/theme/[theme]/i18n/plugin/'.wfArray::get($element, 'settings/i18n/plugin').'/'.$language.'.yml';
         if(wfFilesystem::fileExist(wfArray::get($GLOBALS, 'sys/app_dir').$filename)){
           $temp = wfSettings::getSettings($filename);
           if($temp && isset($temp[$innerHTML])){
@@ -78,17 +66,33 @@ class PluginWfI18n{
             return $element;
           }
         }
-//        $i18n = new PluginWfI18n();
-//        return $i18n->translate('/theme/[theme]/i18n/'.$language.'.yml', $element, $innerHTML);
-        
+        $filename = '/plugin/'.wfArray::get($element, 'settings/i18n/plugin').'/i18n/'.$language.'.yml';
+        if(wfFilesystem::fileExist(wfArray::get($GLOBALS, 'sys/app_dir').$filename)){
+          $temp = wfSettings::getSettings($filename);
+          if($temp && isset($temp[$innerHTML])){
+            $innerHTML = $temp[$innerHTML];
+            $element = wfArray::set($element, 'innerHTML', $innerHTML);
+            return $element;
+          }
+        }
+      }
+      /**
+       * From theme.
+       */
+      $filename = '/theme/[theme]/i18n/'.$language.'.yml';
+      if(wfFilesystem::fileExist(wfArray::get($GLOBALS, 'sys/app_dir').$filename)){
+        $temp = wfSettings::getSettings($filename);
+        if($temp && isset($temp[$innerHTML])){
+          $innerHTML = $temp[$innerHTML];
+          $element = wfArray::set($element, 'innerHTML', $innerHTML);
+        }
+        return $element;
       }
     }
     return $element;
   }
   /**
    * 
-   * @param string $innerHTML Just any string.
-   * @return string
    */
   public function translateFromTheme($innerHTML, $replace = null){
     /**
@@ -118,27 +122,3 @@ class PluginWfI18n{
     return $innerHTML;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
